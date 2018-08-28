@@ -87,13 +87,16 @@ dfPartyStats$SE = dfPartyStats$`Standard Deviation of Spend`/sqrt(dfPartyStats$`
 dfPartyStats$EB = 1.96*dfPartyStats$SE
 write.csv(dfPartyStats,file='partyStats.csv',row.names=FALSE)
 
+#Reorder the levels
+dfPartyStats$Party = factor(dfPartyStats$Party,levels=dfPartyStats[order(-dfPartyStats$`Total Spend`),][,1])
+
 # data only on Dems and Republicans
 dfPartyStats2 = dfPartyStats[dfPartyStats$Party %in% c('R','D'),]
 
 # plot total spend by party
 ggplot(dfPartyStats,aes(x=Party,y=`Total Spend`,fill=Party)) + geom_bar(stat = 'Identity') +
   scale_y_continuous(labels = scales::dollar) + xlab('Party\n') + ylab('Total Spend') + 
-  opts_string + scale_fill_manual(values=c("blue","grey","black","red")) + 
+  opts_string + scale_fill_manual(values=c("red","blue","gray","black")) + 
   ggtitle('Total Spend on Google Ads for 2018 Midterm Election\nBreakdown by Party')
 ggsave('spendByParty.png',units=c('cm'),width=50,height=50)
 
@@ -107,7 +110,7 @@ ggsave('medianSpendByParty.png',units=c('cm'),width=50,height=50)
 # plot number of advertisers by party
 ggplot(dfPartyStats,aes(x=Party,y=`Number of Advertisers`,fill=Party)) + geom_bar(stat = 'Identity') +
   xlab('Party\n') + ylab('Number of Advertisers') + opts_string +
-  scale_fill_manual(values=c("blue","grey","black","red")) + 
+  scale_fill_manual(values=c("red","blue","gray","black")) + 
   ggtitle('Total Advertisers on Google Ads for 2018 Midterm Election\nBreakdown by Party')
 ggsave('NumberOfAdvertisersByParty.png',units=c('cm'),width=50,height=50)
 
