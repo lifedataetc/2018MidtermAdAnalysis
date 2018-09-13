@@ -1,7 +1,7 @@
 # the following code is written to establish an understanding of advertising 
 # spending by Democratic and Repbulican groups on Google from May 27th, 2018 to August 5th, 2018
 
-setwd('DFP/2018MidtermAdAnalysis/')
+setwd('../.')
 # import libraries
 library(ggplot2)
 
@@ -19,6 +19,8 @@ opts_string = {theme(axis.text.x=element_text(size=rel(2),angle=0),
 df = read.csv('data/google-political-ads-advertiser-stats.csv',stringsAsFactors = FALSE)
 # remove leading and trailing while spaces
 df$Advertiser_Name = trimws(df$Advertiser_Name, which = c("both"))
+# fix issues with multiple names
+df$Advertiser_Name[df$Advertiser_Name=='WINNING FOR WOMEN, INC. PAC'] = "WINNING FOR WOMEN, INC."
 
 # get total spend by advertiser
 dfSum = aggregate(df$Total_Spend_USD,by=list(df$Advertiser_Name),FUN=sum)
@@ -26,8 +28,7 @@ colnames(dfSum) = c('Advertiser_Name','Spend')
 dfSum$Advertiser = as.character(dfSum$Advertiser)
 
 # get party information
-Parties = read.csv('data/Advertiser Party Affiliation.csv',stringsAsFactors = FALSE)
-colnames(Parties) = c('Advertiser_Name','party')
+Parties = read.csv('data/Advertiser Party Affiliation V2.csv',stringsAsFactors = FALSE)
 
 # remove leading and trailing while spaces
 Parties$Advertiser_Name = trimws(Parties$Advertiser_Name, which = c("both"))
@@ -96,28 +97,28 @@ dfPartyStats2 = dfPartyStats[dfPartyStats$Party %in% c('R','D'),]
 # plot total spend by party
 ggplot(dfPartyStats,aes(x=Party,y=`Total Spend`,fill=Party)) + geom_bar(stat = 'Identity') +
   scale_y_continuous(labels = scales::dollar) + xlab('Party\n') + ylab('Total Spend') + 
-  opts_string + scale_fill_manual(values=c("red","blue","gray","black")) + 
+  opts_string + scale_fill_manual(values=c("red","blue","gray","black",'yellow')) + 
   ggtitle('Total Spend on Google Ads for 2018 Midterm Election\nBreakdown by Party')
 ggsave('spendByParty.png',units=c('cm'),width=50,height=50)
 
 # plot median spend by party
 ggplot(dfPartyStats2,aes(x=Party,y=`Median Spend`,fill=Party)) + geom_bar(stat = 'Identity') + 
   scale_y_continuous(labels = scales::dollar) + xlab('Party\n') + ylab('Median Spend') + 
-  opts_string + scale_fill_manual(values=c("blue","red")) + 
+  opts_string + scale_fill_manual(values=c("red","blue")) + 
   ggtitle('Median Spend on Google Ads for 2018 Midterm Election\nBreakdown by Party')
 ggsave('medianSpendByParty.png',units=c('cm'),width=50,height=50)
 
 # plot number of advertisers by party
 ggplot(dfPartyStats,aes(x=Party,y=`Number of Advertisers`,fill=Party)) + geom_bar(stat = 'Identity') +
   xlab('Party\n') + ylab('Number of Advertisers') + opts_string +
-  scale_fill_manual(values=c("red","blue","gray","black")) + 
+  scale_fill_manual(values=c("red","blue","gray","black",'yellow')) + 
   ggtitle('Total Advertisers on Google Ads for 2018 Midterm Election\nBreakdown by Party')
 ggsave('NumberOfAdvertisersByParty.png',units=c('cm'),width=50,height=50)
 
 # plot average spend by party
 ggplot(dfPartyStats2,aes(x=Party,y=`Average Spend`,fill=Party)) + geom_bar(stat = 'Identity') + 
   scale_y_continuous(labels = scales::dollar) + xlab('Party\n') + ylab('Average Spend') + 
-  opts_string + scale_fill_manual(values=c("blue","red")) + 
+  opts_string + scale_fill_manual(values=c("red","blue")) + 
   geom_errorbar(aes(ymin=`Average Spend`-SE,ymax=`Average Spend`+SE),width=0.25) +
   ggtitle('Average Spend on Google Ads for 2018 Midterm Election\n95% C.I. Shown')
 ggsave('AverageSpendByParty.png',units=c('cm'),width=50,height=50)
@@ -149,7 +150,7 @@ dfSum$top20[1:20] = TRUE
 # get the top 20 creatives
 ggplot(dfSum[1:20,],aes(x=Advertiser_Name,y=Creatives,fill=party)) + geom_bar(stat = 'identity') + 
   coord_flip() + xlab('Advertiser') + ylab('Number of Different Ads\n') + opts_string +
-  scale_fill_manual(values=c("blue","red")) +
+  scale_fill_manual(values=c("blue",'black',"red")) +
   ggtitle('Number of Unique Ads on Google for 2018 Midterm Election\nTop 20 Advertisers Shown')
 ggsave('top20_byUniqueAds.png',units=c('cm'),width=50,height=40)
 
@@ -213,3 +214,11 @@ ggplot(df2[df2$party %in% c('R','D'),],aes(x=weekOf,y=N,color=party)) + geom_poi
   xlab('Week\n') + ylab('Number of Advertisers') + opts_string + scale_color_manual(values=c("blue","red")) + 
   ggtitle('Number of Weekly Advertisers on Google by Party')
 ggsave('partyTS_N.png',width=50,height=25,units=c('cm'))
+
+ggplot(dfSum[dfSum$party %in% c('R','D'),],aes(x=party,y=Spend,fill=party)) + geom_violin() +
+  geom_violin(trim=FALSE) + scale_y_log10(labels=scales::dollar) + 
+  xlab('Party\n') + ylab('Spending by Advertiser') + 
+  scale_fill_manual(values=c("blue","red")) + 
+  guides(fill=FALSE) + opts_string +
+  ggtitle('Spending Distribution on Google Ads for 2018 Midterm Election\nBreakdown by Party')
+ggsave('SpendDistribute.png',units=c('cm'),width=50,height=50)
